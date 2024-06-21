@@ -3,7 +3,7 @@
 /***********************************************************
   WHAT IS A SECRET?
 ------------------------------------------------------------
-  A `Secret` is an object like the following TypeScript interface.
+  a `Secret` is an object like the following TypeScript interface.
 
   ```ts
   interface Secret {
@@ -12,7 +12,7 @@
   }
   ```
 
-  Because this is plain JavaScript, the goal here is to emulate the `Secret` interface with
+  because this is plain JavaScript, the goal here is to emulate the `Secret` interface with
   `SecretInterface` and by providing `validateSecret` for runtime validation.
 ***********************************************************/
 
@@ -26,7 +26,7 @@ export const SecretInterface = {
     ),
 };
 
-export function validateSecret(maybeSecret /*: Secret?*/) /*: boolean*/ {
+export function validateSecret(maybeSecret/*: Secret?*/)/*: boolean*/ {
   return Object.entries(SecretInterface).every(([ik, iv]) =>
     iv(maybeSecret[ik])
   );
@@ -54,43 +54,31 @@ export function validateSecret(maybeSecret /*: Secret?*/) /*: boolean*/ {
       "72": ["b"],
       "73": ["8", "18"],
       "74": ["6", "d", "16"],
-    },
+    }
   }
 ***********************************************************/
 
-export function encodeSecret(
-  message /*: string*/,
-  base /*: number*/
-) /*: Secret*/ {
-  /* Define encoder. */
-  function encodeItem(x /*: number*/) /*: string*/ {
+export function encodeSecret(message/*: string*/, base/*: number*/)/*: Secret*/ {
+  function encodeItem(x/*: number*/)/*: string*/ {
     return x.toString(base);
   }
-
-  /* Convert string `message` to a list of code points `codeList`. */
-  const codeList = Array.from(message, (x) => x.codePointAt(0));
-
-  /* Convert code points to a dictionary like `{ [secretCode]: [secretIndex, ...], ... }`. */
-  const secretCodeDict = {};
-  for (const [index, code] of codeList.entries()) {
-    /* Encode secret index, code. */
-    const secretIndex = encodeItem(index);
-    const secretCode = encodeItem(code);
-
-    /* If needed, add new key `secretCode` to `secretCodeDict`. */
+  /* convert `message` to a list of code points. */
+  const codeList/*: [number]*/ = Array.from(message, (x) => x.codePointAt(0));
+  /* convert code points to a dictionary like `{ [secretCode]: [secretIndex, ...], ... }`. */
+  const secretCodeDict/*: { string: [string] }*/ = {};
+  for (const [index, code]/*: [number, number]*/ of codeList.entries()) {
+    /* encode secret index, code. */
+    const secretIndex/*: string*/ = encodeItem(index);
+    const secretCode/*: string*/ = encodeItem(code);
+    /* if needed, add new key `secretCode` to `secretCodeDict`. */
     if (!(secretCode in secretCodeDict)) {
       secretCodeDict[secretCode] = [];
     }
-
-    /* Append secret index. */
+    /* append secret index. */
     secretCodeDict[secretCode].push(secretIndex);
   }
-
-  /* Make the secret object; return. */
-  return {
-    base: base,
-    code: secretCodeDict,
-  };
+  /* make the secret object; return it. */
+  return { base: base, code: secretCodeDict };
 }
 
 /***********************************************************
@@ -104,36 +92,29 @@ export function encodeSecret(
   decodedMessage = "keep it secret, keep it safe"
 ***********************************************************/
 
-export function decodeSecret(secret /*: Secret*/) /*: string*/ {
-  /* Define decoder. */
-  function decodeItem(x /*: string*/) /*: number*/ {
+export function decodeSecret(secret/*: Secret*/)/*: string*/ {
+  function decodeItem(x/*: string*/)/*: number*/ {
     return parseInt(x, secret.base);
   }
-
-  /* Initialize empty list of code points `codeList`. */
-  const codeList = [];
-
-  /* Reconstruct code points from the secret. */
-  for (const [secretCode, secretIndexList] of Object.entries(secret.code)) {
-    /* Decode secret code to a real code point. */
-    const code = decodeItem(secretCode);
+  /* reconstruct code points from the secret. */
+  const codeList/*: [number]*/ = [];
+  for (const [secretCode, secretIndexList]/*: [string, [string]]*/ of Object.entries(secret.code)) {
+    /* decode secret code to a real code point. */
+    const code/*: number*/ = decodeItem(secretCode);
 
     for (const secretIndex of secretIndexList) {
-      /* Decode secret index to a real index. */
-      const index = decodeItem(secretIndex);
-
-      /* If needed, grow the list of code points. */
-      const missingLength = index + 1 - codeList.length;
+      /* decode secret index to a real index. */
+      const index/*: number*/ = decodeItem(secretIndex);
+      /* if needed, grow the list of code points. */
+      const missingLength/*: number*/ = index + 1 - codeList.length;
       if (missingLength > 0) {
         codeList.push(...Array(missingLength));
       }
-
-      /* Place the code point. */
+      /* put the code point in the list. */
       codeList[index] = code;
     }
   }
-
-  /* Convert the code points to a string; return. */
+  /* convert the code points to a string; return it. */
   return String.fromCodePoint(...codeList);
 }
 
